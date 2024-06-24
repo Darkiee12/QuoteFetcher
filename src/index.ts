@@ -1,4 +1,7 @@
-import axios from "axios";
+import express, { Request, Response } from 'express';
+import axios from 'axios';
+const app = express();
+const port = 3000;
 interface Quote {
   _id: string;
   content: string;
@@ -30,15 +33,23 @@ const response = (quote: Quote) =>  `
     </html>
   `;
 
-const server = Bun.serve({
-  port: 3000,
-  async fetch(req) {
+  async function fetchData() {
     const quote = (await data()).data[0];
-    const res = response(quote);
-    return new Response(res, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    });
-  },
-});
+    return response(quote);
+  }
+  
+  app.get('/', async (req: Request, res: Response) => {
+    try {
+      const responseText = await fetchData();
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(responseText);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  
+  app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
+  });
